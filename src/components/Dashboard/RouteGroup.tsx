@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { RouteItem } from './RouteItem'
+import { usePathname } from 'next/navigation'
 
 interface RouteGroupProps {
   routes: any[]
@@ -12,6 +13,8 @@ interface RouteGroupProps {
 }
 
 export function RouteGroup({ routes, open, categoryLabel, isCollapsed, darkMode }: RouteGroupProps) {
+  const pathname = usePathname()
+
   return (
     <motion.div className="w-full mb-6" layout transition={{ duration: 0.2, ease: "easeIn" }}>
       {categoryLabel && open && (
@@ -27,10 +30,10 @@ export function RouteGroup({ routes, open, categoryLabel, isCollapsed, darkMode 
       <div className="space-y-1 px-2">
         {routes.map((route) => (
           <RouteItem
-            key={route.label}
+            key={route.path} // Use path as key for better uniqueness
             route={route}
             open={open}
-            isActive={typeof window !== 'undefined' ? window.location.pathname === route.label : false}
+            isActive={pathname === route.path}
             isCollapsed={isCollapsed}
             darkMode={darkMode}
           />

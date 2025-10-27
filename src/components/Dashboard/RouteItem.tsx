@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useDashboard } from '@/context/DashboardContext'
+import Link from 'next/link' // Add this import
 
 interface RouteItemProps {
   route: any
@@ -16,14 +17,12 @@ interface RouteItemProps {
 export function RouteItem({ route, open, isActive, isCollapsed, darkMode }: RouteItemProps) {
   const { setSelected } = useDashboard()
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault() 
-    setSelected(route.label) 
-    window.history.replaceState(null, '', '/dashboard/vendor') 
-    // optional: ensures URL stays the same (optional)
+  const handleClick = () => {
+    setSelected(route.label)
+    // Remove the manual navigation - let Next.js handle routing
   }
 
-  const ItemContent = () => (
+  const ItemContent = ({ isLink = true }) => (
     <motion.div
       whileHover={{ scale: isCollapsed ? 1 : 1.02, x: isCollapsed ? 0 : 2 }}
       whileTap={{ scale: 0.98 }}
@@ -38,7 +37,7 @@ export function RouteItem({ route, open, isActive, isCollapsed, darkMode }: Rout
             ? "bg-gradient-to-r from-blue-50 to-cyan-50/50 text-blue-700 border-blue-500 shadow-sm"
             : "text-neutral-700 hover:text-blue-600 hover:bg-blue-50 border-transparent hover:border-blue-200"
       )}
-      onClick={handleClick} 
+      onClick={isLink ? undefined : handleClick} // Only use onClick for non-link items
     >
       <route.icon className={cn(
         "w-5 h-5 flex-shrink-0 transition-colors duration-300",
@@ -72,27 +71,36 @@ export function RouteItem({ route, open, isActive, isCollapsed, darkMode }: Rout
     </motion.div>
   )
 
+  // Wrap in Link for proper navigation
+  const LinkWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Link href={route.path} onClick={handleClick}>
+      {children}
+    </Link>
+  )
+
   // Tooltip for collapsed sidebar
   if (isCollapsed) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div onClick={handleClick}>
-            <ItemContent />
-          </div>
+          <LinkWrapper>
+            <ItemContent isLink={true} />
+          </LinkWrapper>
         </TooltipTrigger>
         <TooltipContent side="right" className={cn(darkMode ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-200 text-neutral-900")}>
-          <route.icon className="w-4 h-4" />
-          <span>{route.label}</span>
-          {route.badge && (
-            <span className={cn(darkMode ? "bg-cyan-500/20 text-cyan-400" : "bg-blue-100 text-blue-700")}>
-              {route.badge}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <route.icon className="w-4 h-4" />
+            <span>{route.label}</span>
+            {route.badge && (
+              <span className={cn("px-1.5 py-0.5 text-xs rounded-full", darkMode ? "bg-cyan-500/20 text-cyan-400" : "bg-blue-100 text-blue-700")}>
+                {route.badge}
+              </span>
+            )}
+          </div>
         </TooltipContent>
       </Tooltip>
     )
   }
 
-  return <ItemContent />
+  return <LinkWrapper><ItemContent isLink={true} /></LinkWrapper>
 }
